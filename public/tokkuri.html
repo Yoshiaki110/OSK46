@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+</head>
+<body>
+  <div align="center">
+  <img src="tokkuri2.jpeg" width="100%">
+  </div>
+  <div class="output"></div>
+
+<script type="text/javascript">
+
+var query = document.location.search.substring(1);
+console.log('aaa : ' + query);
+var output = document.querySelector('.output');
+var sended = -1000;
+
+var xhr = new XMLHttpRequest();
+
+// ハンドラの登録.
+xhr.onreadystatechange = function() {
+    switch ( xhr.readyState ) {
+        case 0:
+            // 未初期化状態.
+            console.log('uninitialized!');
+            break;
+        case 1: // データ送信中.
+            console.log('loading...');
+            break;
+        case 2: // 応答待ち.
+            console.log('loaded.');
+            break;
+        case 3: // データ受信中.
+            console.log('interactive... ' + xhr.responseText.length+' bytes.');
+            break;
+        case 4: // データ受信完了.
+            if( xhr.status == 200 || xhr.status == 304 ) {
+                var data = xhr.responseText; // responseXML もあり
+                console.log( 'COMPLETE! :' + data );
+            } else {
+                console.log('Failed. HttpStatus: ' + xhr.statusText);
+            }
+            break;
+    }
+};
+
+
+function handleOrientation(event) {
+  var x = event.beta;  // -180 から 180 の範囲で角度を示す
+  var y = event.gamma; // -90 から 90 の範囲で角度を示す
+
+  //output.innerHTML  = "beta : " + x + "\n";
+  //output.innerHTML += "gamma: " + y + "\n";
+  var val = parseInt(Math.abs(x + 90));
+  //var val = parseInt(Math.abs(x - 90));
+  //output.innerHTML += "xx: " + xx + "    xxx: " + xxx + "\n";
+  //var yy = parseInt(Math.abs(y * 2));
+  //output.innerHTML += "yy: " + yy + "\n";
+  if (Math.abs(sended - val) > 2) {
+    xhr.open('POST', 'http://yoro.azurewebsites.net/', false);
+//    xhr.open('POST', 'http://192.168.10.191:3000/', false);
+    // POST 送信の場合は Content-Type は固定.
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    // 
+    var msg = 'id=' + query + '&val=' + val;
+    //xhr.send( 'hoge=piyo&moge=fuga' );
+    xhr.send(msg);
+    xhr.abort(); // 再利用する際にも abort() しないと再利用できないらしい.
+    sended = val;
+  }
+}
+
+window.addEventListener('deviceorientation', handleOrientation);
+</script>
+
+</body>
+</html>
